@@ -1,0 +1,21 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{46D52396-2331-4859-8E37-1315212614B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ithline.Extensions.Caching.EntityFrameworkCore", "src\Ithline.Extensions.Caching.EntityFrameworkCore\Ithline.Extensions.Caching.EntityFrameworkCore.csproj", "{95DF2153-A203-4EB7-BCB3-C84365620A46}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{95DF2153-A203-4EB7-BCB3-C84365620A46} = {46D52396-2331-4859-8E37-1315212614B0}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{95DF2153-A203-4EB7-BCB3-C84365620A46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95DF2153-A203-4EB7-BCB3-C84365620A46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95DF2153-A203-4EB7-BCB3-C84365620A46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95DF2153-A203-4EB7-BCB3-C84365620A46}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
