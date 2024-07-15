@@ -1,12 +1,18 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NodaTime;
 
 namespace Ithline.Extensions.Caching.EntityFrameworkCore;
 
-internal sealed class EntityFrameworkCache<TContext> : IDistributedCache
+/// <summary>
+/// Distributed cache implementation using <see cref="DbContext"/>.
+/// </summary>
+/// <typeparam name="TContext">The type of the <see cref="DbContext"/>.</typeparam>
+public sealed class EntityFrameworkCache<[DynamicallyAccessedMembers(EFCacheHelpers.MemberTypes)] TContext> : IDistributedCache
     where TContext : DbContext, ICacheDbContext
 {
     private readonly IDbContextFactory<TContext> _contextFactory;
@@ -16,13 +22,32 @@ internal sealed class EntityFrameworkCache<TContext> : IDistributedCache
     private readonly Duration _defaultSlidingExpiration;
     private Instant _lastExpirationScan;
 
-    public EntityFrameworkCache(IDbContextFactory<TContext> contextFactory, IOptions<EntityFrameworkCacheOptions> options)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EntityFrameworkCache{TContext}"/>.
+    /// </summary>
+    /// <param name="contextFactory">Factory used to create instances of <typeparamref name="TContext"/>.</param>
+    /// <param name="logger">Logger.</param>
+    /// <param name="options">Options used to configure behavior of the cache.</param>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="contextFactory"/> is <see langword="null"/>.-or-
+    /// <paramref name="logger"/> is <see langword="null"/>.-or-
+    /// <paramref name="options"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <see cref="EntityFrameworkCacheOptions.ExpiredItemsDeletionInterval"/> is less than 5 minutes.-or-
+    /// <see cref="EntityFrameworkCacheOptions.DefaultSlidingExpiration"/> is less than or equal to 0.
+    /// </exception>
+    public EntityFrameworkCache(
+        IDbContextFactory<TContext> contextFactory,
+        ILogger<EntityFrameworkCache<TContext>> logger,
+        IOptions<EntityFrameworkCacheOptions> options)
     {
         ArgumentNullException.ThrowIfNull(contextFactory);
+        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(options);
         ArgumentOutOfRangeException.ThrowIfLessThan(
             value: options.Value.ExpiredItemsDeletionInterval,
-            other: EntityFrameworkCacheHelpers.ExpiredItemsDeletionIntervalMinimum);
+            other: EFCacheHelpers.ExpiredItemsDeletionIntervalMinimum);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(
             value: options.Value.DefaultSlidingExpiration,
             other: Duration.Zero);
@@ -33,6 +58,7 @@ internal sealed class EntityFrameworkCache<TContext> : IDistributedCache
         _defaultSlidingExpiration = options.Value.DefaultSlidingExpiration;
     }
 
+    /// <inheritdoc />
     public byte[]? Get(string key)
     {
         var task = this.GetCore(key, async: false, default);
@@ -40,11 +66,13 @@ internal sealed class EntityFrameworkCache<TContext> : IDistributedCache
         return task.GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc />
     public Task<byte[]?> GetAsync(string key, CancellationToken token = default)
     {
         return this.GetCore(key, async: true, token).AsTask();
     }
 
+    /// <inheritdoc />
     public void Refresh(string key)
     {
         var task = this.GetCore(key, async: false, default);
@@ -52,11 +80,13 @@ internal sealed class EntityFrameworkCache<TContext> : IDistributedCache
         task.GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc />
     public async Task RefreshAsync(string key, CancellationToken token = default)
     {
         await this.GetCore(key, async: true, token);
     }
 
+    /// <inheritdoc />
     public void Remove(string key)
     {
         var task = this.RemoveCore(key, async: false, default);
@@ -64,11 +94,13 @@ internal sealed class EntityFrameworkCache<TContext> : IDistributedCache
         task.GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc />
     public async Task RemoveAsync(string key, CancellationToken token = default)
     {
         await this.RemoveCore(key, async: true, token);
     }
 
+    /// <inheritdoc />
     public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
     {
         var task = this.SetCore(key, async: false, value, options, default);
@@ -76,6 +108,7 @@ internal sealed class EntityFrameworkCache<TContext> : IDistributedCache
         task.GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc />
     public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
     {
         return this.SetCore(key, async: true, value, options, token).AsTask();
@@ -125,7 +158,7 @@ internal sealed class EntityFrameworkCache<TContext> : IDistributedCache
             ? Duration.FromTimeSpan(ts)
             : null;
 
-        var absoluteExpiration = EntityFrameworkCacheHelpers.GetAbsoluteExpiration(now, options);
+        var absoluteExpiration = EFCacheHelpers.GetAbsoluteExpiration(now, options);
         var expiresAt = absoluteExpiration ?? now + (slidingExpiration ?? _defaultSlidingExpiration);
 
         using var context = _contextFactory.CreateDbContext();

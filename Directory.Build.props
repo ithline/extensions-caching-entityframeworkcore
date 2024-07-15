@@ -12,5 +12,4 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>true</ImplicitUsings>
   </PropertyGroup>
-
 </Project>

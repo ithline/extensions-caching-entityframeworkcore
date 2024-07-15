@@ -1,16 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>Ithline.Extensions.Caching.EntityFrameworkCore</PackageId>
-    <PackageTags>caching entityframeworkcore</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/ithline/extensions-caching-entityframeworkcore</PackageProjectUrl>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>ithline</Authors>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/ithline/extensions-caching-entityframeworkcore.git</RepositoryUrl>
+    <RepositoryUrl>https://github.com/ithline/extensions-caching-entityframeworkcore</RepositoryUrl>
+    <Copyright>Copyright © 2024 Ithline</Copyright>
+
+    <PackageId>Ithline.Extensions.Caching.EntityFrameworkCore</PackageId>
+    <PackageTags>EF;EFCore;EntityFramework;EntityFrameworkCore;entity-framework-core;cache;distributedcache</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+
+    <Description>Implementation of Microsoft.Extensions.Caching.Distributed.IDistributedCache using EF Core.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>
     <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
