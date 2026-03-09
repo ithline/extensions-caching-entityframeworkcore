@@ -10,5 +10,5 @@ public interface ICacheDbContext
     /// <summary>
     /// A collection of <see cref="CacheEntry"/>
     /// </summary>
-    DbSet<CacheEntry> CacheEntries { get; }
+    public DbSet<CacheEntry> CacheEntries { get; }
 }

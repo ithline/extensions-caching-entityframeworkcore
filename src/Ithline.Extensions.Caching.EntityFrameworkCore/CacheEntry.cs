@@ -1,5 +1,3 @@
-using NodaTime;
-
 namespace Ithline.Extensions.Caching.EntityFrameworkCore;
 
 /// <summary>
@@ -20,15 +18,15 @@ public sealed class CacheEntry
     /// <summary>
     /// The expiration date and time of the <see cref="CacheEntry"/>.
     /// </summary>
-    public required Instant ExpiresAt { get; set; }
+    public required DateTimeOffset ExpiresAt { get; set; }
 
     /// <summary>
     /// The absolute expiration date and time of the <see cref="CacheEntry"/>.
     /// </summary>
-    public Instant? AbsoluteExpiration { get; set; }
+    public DateTimeOffset? AbsoluteExpiration { get; set; }
 
     /// <summary>
     /// The sliding expiration window of the <see cref="CacheEntry"/>.
     /// </summary>
-    public Duration? SlidingExpiration { get; set; }
+    public TimeSpan? SlidingExpiration { get; set; }
 }

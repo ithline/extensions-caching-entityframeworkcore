@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.2.0</Version>
+    <Version>10.0.0</Version>
     <Authors>ithline</Authors>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/ithline/extensions-caching-entityframeworkcore</RepositoryUrl>
@@ -19,13 +19,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7"/>
-    <PackageReference Include="NodaTime" Version="3.1.11"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

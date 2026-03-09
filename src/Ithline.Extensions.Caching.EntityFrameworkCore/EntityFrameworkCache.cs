@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NodaTime;
 
 namespace Ithline.Extensions.Caching.EntityFrameworkCore;
 
@@ -18,9 +17,9 @@ public sealed class EntityFrameworkCache<[DynamicallyAccessedMembers(EFCacheHelp
     private readonly IDbContextFactory<TContext> _contextFactory;
     private readonly TimeProvider _timeProvider;
 
-    private readonly Duration _expiredItemsDeletionInterval;
-    private readonly Duration _defaultSlidingExpiration;
-    private Instant _lastExpirationScan;
+    private readonly TimeSpan _expiredItemsDeletionInterval;
+    private readonly TimeSpan _defaultSlidingExpiration;
+    private DateTimeOffset _lastExpirationScan;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EntityFrameworkCache{TContext}"/>.
@@ -50,7 +49,7 @@ public sealed class EntityFrameworkCache<[DynamicallyAccessedMembers(EFCacheHelp
             other: EFCacheHelpers.ExpiredItemsDeletionIntervalMinimum);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(
             value: options.Value.DefaultSlidingExpiration,
-            other: Duration.Zero);
+            other: TimeSpan.Zero);
 
         _contextFactory = contextFactory;
         _timeProvider = options.Value.TimeProvider ?? TimeProvider.System;
@@ -116,7 +115,7 @@ public sealed class EntityFrameworkCache<[DynamicallyAccessedMembers(EFCacheHelp
 
     private async ValueTask<byte[]?> GetCore(string key, bool async, CancellationToken cancellationToken)
     {
-        var now = _timeProvider.GetCurrentInstant();
+        var now = _timeProvider.GetUtcNow();
 
         using var context = _contextFactory.CreateDbContext();
         var query = context.CacheEntries
@@ -129,9 +128,9 @@ public sealed class EntityFrameworkCache<[DynamicallyAccessedMembers(EFCacheHelp
             : query.FirstOrDefault();
 
         // ak sme našli záznam v cache a máme sliding expiration a expiration nie je nastavená na absolute expiration, tak aktualizujeme expiresAt
-        if (entry is not null && entry.SlidingExpiration is Duration slidingExpiration && entry.AbsoluteExpiration != entry.ExpiresAt)
+        if (entry is not null && entry.SlidingExpiration is TimeSpan slidingExpiration && entry.AbsoluteExpiration != entry.ExpiresAt)
         {
-            entry.ExpiresAt = entry.AbsoluteExpiration is Instant absoluteExpiration && (now - absoluteExpiration) <= slidingExpiration
+            entry.ExpiresAt = entry.AbsoluteExpiration is DateTimeOffset absoluteExpiration && (now - absoluteExpiration) <= slidingExpiration
                 ? absoluteExpiration
                 : now + slidingExpiration;
 
@@ -152,14 +151,11 @@ public sealed class EntityFrameworkCache<[DynamicallyAccessedMembers(EFCacheHelp
 
     private async ValueTask SetCore(string key, bool async, byte[] value, DistributedCacheEntryOptions options, CancellationToken cancellationToken)
     {
-        var now = _timeProvider.GetCurrentInstant();
-
-        Duration? slidingExpiration = options.SlidingExpiration is TimeSpan ts
-            ? Duration.FromTimeSpan(ts)
-            : null;
+        var now = _timeProvider.GetUtcNow();
+        var slidingExpiration = options.SlidingExpiration;
 
         var absoluteExpiration = EFCacheHelpers.GetAbsoluteExpiration(now, options);
-        var expiresAt = absoluteExpiration ?? now + (slidingExpiration ?? _defaultSlidingExpiration);
+        var expiresAt = absoluteExpiration ?? (now + (slidingExpiration ?? _defaultSlidingExpiration));
 
         using var context = _contextFactory.CreateDbContext();
         var query = context.CacheEntries
@@ -217,7 +213,7 @@ public sealed class EntityFrameworkCache<[DynamicallyAccessedMembers(EFCacheHelp
 
     private async ValueTask ScanExpiredItemsCore(TContext context, bool async, CancellationToken cancellationToken)
     {
-        var now = _timeProvider.GetCurrentInstant();
+        var now = _timeProvider.GetUtcNow();
         if (now - _lastExpirationScan <= _expiredItemsDeletionInterval)
         {
             return;
